@@ -226,7 +226,7 @@ patterns = {
     "clanAcceptingApps" : r'<p>Your clan is currently accepting applications\.<br>',
     "clanRankContainer" : r'<select name=level[0-9]+>(.*?)<\/select>',
     "clanRank" : r'<option value=([0-9]+)(?: selected)?>(.*?) \(&deg;([0-9]+)\)<\/option>',
-    
+
     # Clan patterns
     "whitelistMember" : r'<tr><td><input type=hidden name=[^>]* value=[^>]*><a href=\'showplayer\.php\?who=([0-9,]+)\' class=nounder><b>(.*?)<\/b> \([^>]*\)<\/a><\/td><td>(.*?)<\/td><td>',
     "clanRosterMember" : r'<tr><td><input name=[^>]* value=[^>]* type=hidden><a class=nounder href=\'showplayer\.php\?who=([0-9,]+)\'>(.*?)<\/a>[^>]*<\/td><td>(.*?)<\/td><td>[^>]*</td></tr>',
@@ -235,5 +235,6 @@ patterns = {
     "playerClan" : r'<a class=nounder href="showclan.php\?whichclan=([0-9,]+)">(.*?)</a>',
     "numberAscensions" : r'Ascensions</a>:</b></td><td>([0-9,]+)</td>',
     "numberTrophies" : r'Trophies Collected:</b></td><td>([0-9,]+)</td>',
-    "numberTattoos" : r'Tattoos Collected:</b></td><td>([0-9,]+)</td>',
+    "numberTattoos" : r'Tattoos Collected:</b></td><td>([0-9,]+)</td>',   
+    "recentAscension" : r'<td class=small><b><a class=nounder href="showplayer\.php\?who=([0-9,]+)">(.*?)<\/a><\/b><\/td><td class=small>([0-9,]+) </td><td class=small>(.*?)<\/td><td class=small>(.*?)<\/td><\/tr>',
 }

@@ -1,4 +1,4 @@
-from kol.Error import Error, DontHaveEffectError, NotEnoughItemsError
+from kol.Error import Error
 from kol.manager import FilterManager
 from kol.request.UneffectRequest import UneffectRequest
 from kol.request.CharpaneRequest import CharpaneRequest
@@ -23,10 +23,6 @@ def uneffect(bot, id):
     try:
         r.doRequest()
         resp = "Effect successfully removed!"
-    except DontHaveEffectError:
-        resp = "I do not currently have that effect."
-    except NotEnoughItemsError:
-        resp = "I do not have any SGEEAs. Would you be kind enough to send me some?"
     except Error:
         resp = "Unable to remove effect for unknown reason."
     
