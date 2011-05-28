@@ -409,14 +409,14 @@ class Bot(threading.Thread):
                 r = ClanStashLogRequest(self.session)
                 responseData = r.doRequest()
                 Report.info("bot", "Checking clan stash log")
-                ClanStashLog.logUpdates(responseData["items"], self.params["userClan"], self.session)                
+                ClanStashLog.logClanStashEnter(responseData["items"], self.params["userClan"], self.session)                
             else:
                 if time.time() > self.stashLogLastRun + self.stashLogSleep:
                     self.stashLogLastRun = time.time()
                     r = ClanStashLogRequest(self.session)
                     responseData = r.doRequest()
                     Report.info("bot", "Checking clan stash log")
-                    ClanStashLog.logUpdates(responseData["items"], self.params["userClan"], self.session)    
+                    ClanStashLog.logClanStashEnter(responseData["items"], self.params["userClan"], self.session)    
         if DataUtils.getBoolean(self.params, "doWork:doRosterAnnouncements", False):
             if self.clanRosterLastRun == 0:
                 self.clanRosterLastRun = time.time()
@@ -487,7 +487,7 @@ class Bot(threading.Thread):
                                 Report.info("bot", "Leaderboards file created.")
                                 Report.info("bot", "FTP starting")
                                 ClanLeaderboards.ftpLeaderboardFile()                            
-                                Report.info("bot", "Populating leaderboards complete.")
+                                Report.info("bot", "FTP complete.")
                         except:
                             Report.info("bot", "Error populating clan leaderboards, we'll try again later")
                         else:
