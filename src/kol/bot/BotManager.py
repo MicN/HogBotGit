@@ -7,8 +7,10 @@ reasonable, and initializing the random number generator.
 
 from kol.database import ItemDatabase
 from kol.database import SkillDatabase
+from kol.database import HogDatabase
 from kol.manager import FilterManager
 from kol.util import Report
+
 
 import random
 import socket
@@ -27,6 +29,7 @@ def init(params=None):
     # Initialize the databases.
     ItemDatabase.init()
     SkillDatabase.init()
+    HogDatabase.init()
 
     # Force HTTP requests to timeout after 5 minutes.
     socket.setdefaulttimeout(300)

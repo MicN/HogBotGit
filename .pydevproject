@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?eclipse-pydev version="1.0"?>
+
+<pydev_project>
+<pydev_property name="org.python.pydev.PYTHON_PROJECT_INTERPRETER">Default</pydev_property>
+<pydev_property name="org.python.pydev.PYTHON_PROJECT_VERSION">python 2.7</pydev_property>
+<pydev_pathproperty name="org.python.pydev.PROJECT_SOURCE_PATH">
+<path>/HogBotGit/src</path>
+</pydev_pathproperty>
+<pydev_pathproperty name="org.python.pydev.PROJECT_EXTERNAL_SOURCE_PATH">
+<path>F:\Dev\Python27\Lib</path>
+<path>F:\Dev\Python27\Lib\site-packages</path>
+<path>F:\Dev\Python27\Lib\site-packages\beautifulsoup-3.1.0.1-py2.7.egg</path>
+<path>F:\Dev\Python27\Lib\site-packages\mechanize-0.2.2-py2.7.egg</path>
+<path>F:\Dev\Python27\Lib\site-packages\tinyurl-0.1.0-py2.7.egg</path>
+</pydev_pathproperty>
+</pydev_project>

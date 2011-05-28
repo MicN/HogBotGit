@@ -1,5 +1,5 @@
 from GenericRequest import GenericRequest
-from kol.util import Report
+import kol.Error as Error
 from kol.manager import PatternManager
 from kol.database import SkillDatabase
 
