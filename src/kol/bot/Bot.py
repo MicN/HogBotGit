@@ -10,6 +10,10 @@ from kol.request.DeleteMessagesRequest import DeleteMessagesRequest
 from kol.request.GetMessagesRequest import GetMessagesRequest
 from kol.request.MainMapRequest import MainMapRequest
 from kol.request.SendMessageRequest import SendMessageRequest
+from kol.request.ClanWhitelistRequest import ClanWhitelistRequest
+from kol.request.ClanRosterRequest import ClanRosterRequest
+from kol.request.ClanStashLogRequest import ClanStashLogRequest
+from kol.hogs import ClanLeaderboards, ClanStashLog, HodForums, ClanRosters
 from kol.util import DataUtils
 from kol.util import Report
 
@@ -19,6 +23,7 @@ import pickle
 import threading
 import time
 import urllib2
+import tinyurl
 
 COMMANDS_COMMANDS = ["command", "commands"]
 HELP_COMMANDS = ["help"]
@@ -46,6 +51,14 @@ class Bot(threading.Thread):
         self.states = {}
         self.session = None
         self.runBot = True
+        self.forumSleep = params["forumSleep"]
+        self.clanRosterSleep = params["clanRosterSleep"]
+        self.stashLogSleep = params["stashLogSleep"]
+        self.forumsLastRun = 0
+        self.clanRosterLastRun = 0
+        self.stashLogLastRun = 0
+        self.leaderboardsRun = 0
+        self.leaderboardsDelay = params["leaderboardsDelay"]
 
         # Allow for people to hook in before the bot is initialized.
         self.executeFilter("botPreInitialization")
@@ -386,6 +399,101 @@ class Bot(threading.Thread):
                 del chats[0]
                 self.writeState("cycle")
                 self.clearState("job")
+        
+        ##### HogBot custom code begins #####
+        
+        
+        if DataUtils.getBoolean(self.params, "doWork:doStashLog", False):
+            if self.stashLogLastRun == 0:
+                self.stashLogLastRun = time.time()
+                r = ClanStashLogRequest(self.session)
+                responseData = r.doRequest()
+                Report.info("bot", "Checking clan stash log")
+                ClanStashLog.logUpdates(responseData["items"], self.params["userClan"], self.session)                
+            else:
+                if time.time() > self.stashLogLastRun + self.stashLogSleep:
+                    self.stashLogLastRun = time.time()
+                    r = ClanStashLogRequest(self.session)
+                    responseData = r.doRequest()
+                    Report.info("bot", "Checking clan stash log")
+                    ClanStashLog.logUpdates(responseData["items"], self.params["userClan"], self.session)    
+        if DataUtils.getBoolean(self.params, "doWork:doRosterAnnouncements", False):
+            if self.clanRosterLastRun == 0:
+                self.clanRosterLastRun = time.time()
+                r = ClanRosterRequest(self.session)
+                responseData = r.doRequest()
+                Report.info("bot", "Checking clan rosters")
+                joined, left = ClanRosters.checkRoster(responseData["members"], self.params["userClan"], self.session)                
+                for userId, userName in joined.items():
+                    self.sendChatMessage("/w %s %s" % (userId, "Welcome to the clan, I am the chatbot. For a list of commands /w " + self.params["userName"] + " help"))
+                    self.sendChatMessage(userName + " (#" + str(userId) + ") joined the clan")                    
+                for userId, userName in left.items():
+                    self.sendChatMessage(userName + " (#" + str(userId) + ") left the clan")        
+            else:
+                if time.time() > self.clanRosterLastRun + self.clanRosterSleep:
+                    self.clanRosterLastRun = time.time()
+                    r = ClanRosterRequest(self.session)
+                    responseData = r.doRequest()
+                    Report.info("bot", "Checking clan rosters")
+                    joined, left = ClanRosters.checkRoster(responseData["members"], self.params["userClan"], self.session)
+                    for userId, userName in joined.items():
+                        self.sendChatMessage("/w %s %s" % (userId, "Welcome to the clan, I am the chatbot. For a list of commands /w " + self.params["userName"] + " help"))
+                        self.sendChatMessage(userName + " (#" + str(userId) + ") joined the clan")                        
+                    for userId, userName in left.items():
+                        self.sendChatMessage(userName + " (#" + str(userId) + ") left the clan")                                                                        
+        if DataUtils.getBoolean(self.params, "doWork:forums", False):
+            if self.forumsLastRun == 0:
+                self.forumsLastRun = time.time()
+                try:
+                    users, topics, urls = HodForums.scrape_forums(self.params["forumsLogin"], self.params["forumsPassword"])
+                except:
+                    Report.info("bot", "Error connecting to forums, we'll try again later")
+                    pass    
+                else:            
+                    i = 0
+                    while i < len(users) and i < 5:
+                        tinyUrl = tinyurl.create_one(urls[i])
+                        self.sendChatMessage(users[i] + " posted in topic " + topics[i] + ": " + tinyUrl)
+                        i+=1                    
+            else:
+                if time.time() > self.forumsLastRun + self.forumSleep:
+                    self.forumsLastRun = time.time()
+                    try:
+                        users, topics, urls = HodForums.scrape_forums(self.params["forumsLogin"], self.params["forumsPassword"])
+                    except:
+                        Report.info("bot", "Error connecting to forums, we'll try again later")
+                        pass                
+                    else:
+                        i = 0
+                        while i < len(users) and i < 5:
+                            tinyUrl = tinyurl.create_one(urls[i])
+                            self.sendChatMessage(users[i] + " posted in topic " + topics[i] + ": " + tinyUrl )
+                            i+=1                                    
+        if DataUtils.getBoolean(self.params, "doWork:leaderboards", False):                                
+            if self.leaderboardsRun >= 0:
+                if self.leaderboardsRun == 0:
+                    self.leaderboardsRun = time.time() + self.leaderboardsDelay
+                else:
+                    if time.time() > self.leaderboardsRun:                            
+                        r = ClanWhitelistRequest(self.session)
+                        responseData = r.doRequest()
+                        try:
+                            Report.info("bot", "Populating leaderboards.")
+                            ClanLeaderboards.populateLeaderboards(responseData["members"], self.session)
+                            Report.info("bot", "Populating leaderboards complete.")
+                            if DataUtils.getBoolean(self.params, "doWork:leaderboardsUpload", False):
+                                Report.info("bot", "Creating leaderboards file.")
+                                ClanLeaderboards.createLeaderboardFile()
+                                Report.info("bot", "Leaderboards file created.")
+                                Report.info("bot", "FTP starting")
+                                ClanLeaderboards.ftpLeaderboardFile()                            
+                                Report.info("bot", "Populating leaderboards complete.")
+                        except:
+                            Report.info("bot", "Error populating clan leaderboards, we'll try again later")
+                        else:
+                            self.leaderboardsRun = -1 # Don't run again this session
+                            self.sendChatMessage("Clan leaderboards updated: http://www.hogsofdestiny.com/leaderboards")                
+        ##### HogBot custom code ends #####
 
     def clearWork(self):
         """
