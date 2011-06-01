@@ -49,6 +49,8 @@ def parseMessages(text, isGet):
     emotePattern = PatternManager.getOrCompilePattern("chatEmote")
     privateChatPattern = PatternManager.getOrCompilePattern("privateChat")
     newKmailPattern = PatternManager.getOrCompilePattern("chatNewKmailNotification")
+    playerLoggedOnPattern = PatternManager.getOrCompilePattern("playerLoggedOn")
+    playerLoggedOffPattern = PatternManager.getOrCompilePattern("playerLoggedOff")
     linkPattern = PatternManager.getOrCompilePattern("chatLink")
     chatWhoPattern = PatternManager.getOrCompilePattern("chatWhoResponse")
     linkedPlayerPattern = PatternManager.getOrCompilePattern("chatLinkedPlayer")
@@ -186,6 +188,22 @@ def parseMessages(text, isGet):
                 chat["userId"] = int(match.group(1))
                 chat["userName"] = match.group(2)
                 chat["text"] = match.group(3).strip()
+                parsedChat = True
+                
+        if parsedChat == False:
+            match = playerLoggedOnPattern.search(line)
+            if match:
+                chat["type"] = "logonNotification"
+                chat["userId"] = int(match.group(1))
+                chat["userName"] = match.group(2)
+                parsedChat = True
+                
+        if parsedChat == False:
+            match = playerLoggedOffPattern.search(line)
+            if match:
+                chat["type"] = "logoffNotification"
+                chat["userId"] = int(match.group(1))
+                chat["userName"] = match.group(2)
                 parsedChat = True
 
         if isGet:

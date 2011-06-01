@@ -14,6 +14,7 @@ from kol.request.ClanWhitelistRequest import ClanWhitelistRequest
 from kol.request.ClanRosterRequest import ClanRosterRequest
 from kol.request.ClanStashLogRequest import ClanStashLogRequest
 from kol.request.RecentAscensionsRequest import RecentAscensionsRequest
+from kol.request.ClanWarfareRequest import ClanWarfareRequest
 from kol.hogs import ClanLeaderboards, ClanStashLog, HodForums, ClanRosters
 from kol.database import HogDatabase
 from kol.util import DataUtils
@@ -26,6 +27,7 @@ import threading
 import time
 import urllib2
 import tinyurl
+from random import choice
 
 COMMANDS_COMMANDS = ["command", "commands"]
 HELP_COMMANDS = ["help"]
@@ -57,10 +59,12 @@ class Bot(threading.Thread):
         self.clanRosterSleep = params["clanRosterSleep"]
         self.stashLogSleep = params["stashLogSleep"]
         self.todaysAscensionsSleep = params["todaysAscensionsSleep"]
+        self.clanWarfareSleep = params["clanWarfareSleep"]
         self.forumsLastRun = 0
         self.clanRosterLastRun = 0
         self.stashLogLastRun = 0
         self.todaysAscensionsLastRun = 0
+        self.clanWarfareLastRun = 0
         self.leaderboardsRun = 0        
         self.leaderboardsDelay = params["leaderboardsDelay"]
 
@@ -433,6 +437,22 @@ class Bot(threading.Thread):
                     self.forumsLastRun = time.time()
                     self.doForums()
                                             
+        if DataUtils.getBoolean(self.params, "doWork:doClanWarfare", False):
+            if self.clanWarfareLastRun == 0:
+                self.clanWarfareLastRun = time.time()
+                            
+                if self.doClanWarfare() == True:
+                    # If attack is successful, sleep 3 hours 5 minutes
+                    self.clanWarfareSleep = 11100
+                                                             
+            else:
+                if time.time() > self.clanWarfareLastRun + self.clanWarfareSleep:
+                    self.clanWarfareLastRun = time.time()
+
+                    if self.doClanWarfare() == True:
+                        # If attack is successful, sleep 3 hours 5 minutes
+                        self.clanWarfareSleep = 11100
+                    
         if DataUtils.getBoolean(self.params, "doWork:doTodaysAscensions", False):
             if self.todaysAscensionsLastRun == 0:
                 self.todaysAscensionsLastRun = time.time()
@@ -458,7 +478,7 @@ class Bot(threading.Thread):
                     self.leaderboardsRun = time.time() + self.leaderboardsDelay
                 else:
                     if time.time() > self.leaderboardsRun:                            
-                        self.doLeaderboards(self)  
+                        self.doLeaderboards()  
         ##### HogBot custom code ends #####
 
     def clearWork(self):
@@ -617,9 +637,9 @@ class Bot(threading.Thread):
                     HogDatabase.insertTodaysAscension(ascension["userId"])
                     path = ""
                     if ascension["path"] == "":
-                        path = "Special Challenge Path"
+                        path = "Specially-Challenged"
                     elif ascension["path"] == "none":                                
-                        path = "No-Path"                            
+                        path = "No-Path"
                     self.sendChatMessage(ascension["userName"] + " (#" + str(ascension["userId"]) + ") ascended as a " + ascension["type"] + " " + path + " " + ascension["class"])
                     
         Report.info("bot", "Latest ascensions processed")   
@@ -654,7 +674,29 @@ class Bot(threading.Thread):
         responseData = r.doRequest()
         ClanStashLog.logClanStash(responseData, self.params["userClan"], self.session)
         Report.info("bot", "Clan stash logged")
-    
+        
+    def doClanWarfare(self):
+        Report.info("bot", "Running Clan Warfare")
+        r = ClanWarfareRequest(self.session, 0)
+        responseData = r.doRequest()
+        
+        if responseData["status"] == "wait":
+            Report.info("bot", "Sleeping on clan warfare")
+            return False
+        else:
+            print "status: " + responseData["status"]
+            clan = choice(responseData["clans"])
+            print "clanID: " + str(clan["clanId"])                   
+            r = ClanWarfareRequest(self.session, clan["clanId"])
+            r = ClanWarfareRequest(self.session, 0)
+            responseData = r.doRequest()
+            if responseData["status"] == "error":
+                self.sendChatMessage("There was a problem with clan warfare.")
+            elif responseData["status"] == "won":
+                self.sendChatMessage("Attacked " + clan["clanName"] + " for " + str(responseData["goodiesWon"]) + " bag(s) of goodies.")
+                                
+        Report.info("bot", "Clan Warfare Complete")
+        
     def doLeaderboards(self):
         r = ClanWhitelistRequest(self.session)
         responseData = r.doRequest()
@@ -673,4 +715,4 @@ class Bot(threading.Thread):
             Report.info("bot", "Error populating clan leaderboards, we'll try again later")
         else:
             self.leaderboardsRun = -1 # Don't run again this session
-            self.sendChatMessage("Clan leaderboards updated: http://www.hogsofdestiny.com/leaderboards")              
+            self.sendChatMessage("Clan leaderboards updated: http://www.hogsofdestiny.com/leaderboards")

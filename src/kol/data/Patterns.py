@@ -75,6 +75,8 @@ patterns = {
     "chatEmote" : r'<b><i><a target="?mainpane"? href="showplayer\.php\?who=([0-9]+)"><font color="?#?\w+"?>([^<>]+)<\/b><\/font><\/a> (.*)<\/i>$',
     "privateChat" : r'<a target="?mainpane"? href="showplayer\.php\?who=([0-9]+)"><font color="?blue"?><b>([^)]+) \(private\):<\/b><\/font><\/a> <font color="?blue"?>(.*)</font>$',
     "chatNewKmailNotification" : r'<a target="?mainpane"? href="messages\.php"><font color="?green"?>New message received from <a target="?mainpane"? href=\'showplayer\.php\?who=([0-9]+)\'><font color="?green"?>([^<>]+)<\/font><\/a>\.<\/font><\/a>$',
+    "playerLoggedOn" : r'<font color=green><a target=mainpane href=\'showplayer\.php\?who=([0-9]+)\'><font color=green><b>([^<>]+)<\/b><\/font><\/a> logged on\.<\/font>$',
+    "playerLoggedOff" : r'<font color=green><a target=mainpane href=\'showplayer\.php\?who=([0-9]+)\'><font color=green><b>([^<>]+)<\/b><\/font><\/a> logged off\.<\/font>$',
     "chatLink" : r'<a target="?_blank"? href="([^"]+)"><font color="?blue"?>\[link\]<\/font><\/a> ',
     "chatWhoResponse" : r'<table><tr><td class=tiny><center><b>Players in this channel:',
     "chatWhoPerson" : r'<a target="?mainpane"? href="showplayer\.php\?who=([0-9]+)"><font color="?#?\w+"?>([^<>]+)<\/font><\/a>',
@@ -230,7 +232,10 @@ patterns = {
     # Clan patterns
     "whitelistMember" : r'<tr><td><input type=hidden name=[^>]* value=[^>]*><a href=\'showplayer\.php\?who=([0-9,]+)\' class=nounder><b>(.*?)<\/b> \([^>]*\)<\/a><\/td><td>(.*?)<\/td><td>',
     "clanRosterMember" : r'<tr><td><input name=[^>]* value=[^>]* type=hidden><a class=nounder href=\'showplayer\.php\?who=([0-9,]+)\'>(.*?)<\/a>[^>]*<\/td><td>(.*?)<\/td><td>[^>]*</td></tr>',
-
+    "clanAttackListMember" : r'<input type=radio name=whichclan value=([0-9,]+)><\/td><td><b>(.*?)<\/td><td>([0-9,]+)<\/td>',        
+    "clanArmyWonPattern" : r'Your Army looted ([0-9,]+) Bags of Goodies.',
+    "clanAttackWaitPattern" : r'Your clan can only attack another clan',
+    
     # ShowPlayer patterns
     "playerClan" : r'<a class=nounder href="showclan.php\?whichclan=([0-9,]+)">(.*?)</a>',
     "numberAscensions" : r'Ascensions</a>:</b></td><td>([0-9,]+)</td>',
